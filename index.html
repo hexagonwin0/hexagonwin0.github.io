@@ -1,12 +1,1318 @@
-<html>
+<!DOCTYPE html>
+<html lang="ko">
 <head>
- <title>HELLO WORLD</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쾨펜의 기후 구분 연습</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* 배경 */
+        #background {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            z-index: -1;
+            animation: moveBackground 30s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* 메인 컨테이너 */
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px);
+        }
+
+        /* 메인 페이지 */
+        .main-page {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .main-page h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .main-page .subtitle {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        /* 버튼 스타일 */
+        .button {
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .button-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .button-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .button-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .button-secondary.used {
+            background: #87CEEB;
+            color: white;
+        }
+
+        .button-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .button-success:hover {
+            background: #229954;
+        }
+
+        .button-success:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 문제 페이지 */
+        .quiz-page {
+            display: none;
+            width: 90%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .quiz-header h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            font-size: 1.1em;
+            color: #7f8c8d;
+        }
+
+        /* 기후 그래프 */
+        .climate-graph {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            height: 450px;
+        }
+
+        /* 캔버스 기반 그래프 */
+        #climateCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 선택 영역 */
+        .selection-area {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .selection-group {
+            margin-bottom: 25px;
+        }
+
+        .selection-group h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .selection-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .selection-option {
+            padding: 12px 25px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            font-weight: 500;
+        }
+
+        .selection-option:hover {
+            border-color: #3498db;
+            background: #ecf0f1;
+        }
+
+        .selection-option.selected {
+            border-color: #3498db;
+            background: #3498db;
+            color: white;
+        }
+
+        .selection-option.correct {
+            border-color: #27ae60;
+            background: #27ae60;
+            color: white;
+        }
+
+        .selection-option.incorrect {
+            border-color: #e74c3c;
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* 액션 버튼들 */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* 결과 페이지 */
+        .result-page {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .result-page h2 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .score {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .score.excellent { color: #27ae60; }
+        .score.good { color: #3498db; }
+        .score.fair { color: #f39c12; }
+        .score.poor { color: #e74c3c; }
+
+        /* 팝업 */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .popup h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .popup p {
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .popup input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* 튜토리얼 */
+        .tutorial-content {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .tutorial-content h4 {
+            color: #2c3e50;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .tutorial-content ul {
+            list-style-position: inside;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .main-page h1 {
+                font-size: 2em;
+            }
+            
+            .selection-options {
+                flex-direction: column;
+            }
+            
+            .climate-graph {
+                height: 350px;
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-<h1>Hello world!</h1>
-<hr>
-<p>- west oil chan</p>
-</body>
+    <!-- 배경 캔버스 -->
+    <canvas id="background"></canvas>
 
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container">
+        <!-- 메인 페이지 -->
+        <div class="main-page" id="mainPage">
+            <h1>🌍 쾨펜의 기후 구분</h1>
+            <p class="subtitle">기후 그래프를 보고 기후 유형을 맞춰보세요!</p>
+            <div>
+                <button class="button button-primary" onclick="showQuestionPopup()">시작하기</button>
+                <button class="button button-secondary" onclick="showTutorial()">튜토리얼</button>
+            </div>
+        </div>
+
+        <!-- 문제 페이지 -->
+        <div class="quiz-page" id="quizPage">
+            <div class="quiz-header">
+                <h2>어떤 기후일까요?</h2>
+                <p class="progress">문제 <span id="currentQuestion">1</span> / <span id="totalQuestions">10</span></p>
+            </div>
+            
+            <div class="climate-graph">
+                <canvas id="climateCanvas"></canvas>
+            </div>
+
+            <div class="selection-area">
+                <!-- 반구 선택 -->
+                <div class="selection-group">
+                    <h3>어느 반구의 기후일까요?</h3>
+                    <div class="selection-options" id="hemisphereOptions">
+                        <div class="selection-option" onclick="selectHemisphere('north')">북반구</div>
+                        <div class="selection-option" onclick="selectHemisphere('south')">남반구</div>
+                    </div>
+                </div>
+
+                <!-- 1차 구분 -->
+                <div class="selection-group">
+                    <h3>1차 구분 (대분류)</h3>
+                    <div class="selection-options" id="primaryOptions">
+                        <div class="selection-option" onclick="selectPrimary('A')">A (열대기후)</div>
+                        <div class="selection-option" onclick="selectPrimary('B')">B (건조기후)</div>
+                        <div class="selection-option" onclick="selectPrimary('C')">C (온대기후)</div>
+                        <div class="selection-option" onclick="selectPrimary('D')">D (냉대기후)</div>
+                        <div class="selection-option" onclick="selectPrimary('E')">E (한대기후)</div>
+                    </div>
+                </div>
+
+                <!-- 2차 구분 -->
+                <div class="selection-group">
+                    <h3>2차 구분 (세부분류)</h3>
+                    <div class="selection-options" id="secondaryOptions">
+                        <!-- 동적으로 생성됨 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="button button-secondary" onclick="showHint(1)">힌트 1</button>
+                <button class="button button-secondary" onclick="showHint(2)">힌트 2</button>
+                <button class="button button-success" id="nextButton" onclick="checkAnswer()" disabled>정답 확인</button>
+            </div>
+        </div>
+
+        <!-- 결과 페이지 -->
+        <div class="result-page" id="resultPage">
+            <h2>🎉 수고하셨습니다!</h2>
+            <div class="score" id="scoreDisplay">0%</div>
+            <p id="scoreMessage"></p>
+            <button class="button button-primary" onclick="backToMain()">처음으로</button>
+        </div>
+    </div>
+
+    <!-- 팝업들 -->
+    <!-- 문제 수 입력 팝업 -->
+    <div class="popup" id="questionPopup">
+        <h3>몇 문제를 풀어보시겠어요?</h3>
+        <input type="number" id="questionCount" min="4" max="100" value="10" placeholder="4~100">
+        <div style="text-align: center;">
+            <button class="button button-primary" onclick="startQuiz()">시작</button>
+            <button class="button button-secondary" onclick="closePopup('questionPopup')">취소</button>
+        </div>
+    </div>
+
+    <!-- 튜토리얼 팝업 -->
+    <div class="popup" id="tutorialPopup">
+        <h3>📚 쾨펜의 기후 구분 튜토리얼</h3>
+        <div class="tutorial-content">
+            <h4>기후 구분 방법</h4>
+            <ul>
+                <li><strong>열대기후(A):</strong> 최한월 평균기온 18℃ 이상</li>
+                <li><strong>건조기후(B):</strong> 강수량 < 증발량</li>
+                <li><strong>온대기후(C):</strong> 최한월 -3℃~18℃</li>
+                <li><strong>냉대기후(D):</strong> 최한월 -3℃ 미만, 최난월 10℃ 이상</li>
+                <li><strong>한대기후(E):</strong> 최난월 10℃ 미만</li>
+            </ul>
+            
+            <h4>반구 구분</h4>
+            <ul>
+                <li><strong>북반구:</strong> 6~8월이 여름 (기온 높음)</li>
+                <li><strong>남반구:</strong> 12~2월이 여름 (기온 높음)</li>
+            </ul>
+
+            <h4>2차 구분</h4>
+            <ul>
+                <li><strong>f:</strong> 연중 강수</li>
+                <li><strong>w:</strong> 겨울 건조</li>
+                <li><strong>s:</strong> 여름 건조</li>
+                <li><strong>m:</strong> 몬순 (열대만)</li>
+                <li><strong>W/S:</strong> 사막/스텝 (건조기후)</li>
+                <li><strong>T/F:</strong> 툰드라/빙설 (한대기후)</li>
+            </ul>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="button button-primary" onclick="closePopup('tutorialPopup')">확인</button>
+        </div>
+    </div>
+
+    <!-- 힌트 팝업 -->
+    <div class="popup" id="hintPopup">
+        <h3 id="hintTitle">힌트</h3>
+        <p id="hintContent"></p>
+        <div style="text-align: center;">
+            <button class="button button-primary" onclick="closePopup('hintPopup')">확인</button>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentQuestionIndex = 0;
+        let totalQuestions = 10;
+        let correctAnswers = 0;
+        let questions = [];
+        let selectedHemisphere = null;
+        let selectedPrimary = null;
+        let selectedSecondary = null;
+        let isAnswered = false;
+
+        // 기후 타입과 코드 매핑
+        const climateMapping = {
+            "열대 우림 기후": { hemisphere: "both", primary: "A", secondary: "f", code: "Af" },
+            "열대 사바나 기후": { hemisphere: "both", primary: "A", secondary: "w", code: "Aw" },
+            "열대 몬순 기후": { hemisphere: "both", primary: "A", secondary: "m", code: "Am" },
+            "지중해성 기후": { hemisphere: "both", primary: "C", secondary: "s", code: "Cs" },
+            "서안 해양성 기후": { hemisphere: "north", primary: "C", secondary: "f", code: "Cf" },
+            "온난 습윤 기후": { hemisphere: "both", primary: "C", secondary: "f", code: "Cf" },
+            "온대 겨울 건조 기후": { hemisphere: "both", primary: "C", secondary: "w", code: "Cw" },
+            "냉대 습윤 기후": { hemisphere: "north", primary: "D", secondary: "f", code: "Df" },
+            "냉대 겨울 건조 기후": { hemisphere: "north", primary: "D", secondary: "w", code: "Dw" },
+            "툰드라 기후": { hemisphere: "both", primary: "E", secondary: "T", code: "ET" },
+            "빙설 기후": { hemisphere: "both", primary: "E", secondary: "F", code: "EF" },
+            "스텝 기후": { hemisphere: "both", primary: "B", secondary: "S", code: "BS" },
+            "사막 기후": { hemisphere: "both", primary: "B", secondary: "W", code: "BW" }
+        };
+
+        // 2차 구분 옵션
+        const secondaryOptions = {
+            "A": [
+                { value: "f", text: "f (열대 우림)" },
+                { value: "w", text: "w (사바나)" },
+                { value: "m", text: "m (몬순)" }
+            ],
+            "B": [
+                { value: "W", text: "W (사막)" },
+                { value: "S", text: "S (스텝)" }
+            ],
+            "C": [
+                { value: "f", text: "f (연중 습윤)" },
+                { value: "w", text: "w (겨울 건조)" },
+                { value: "s", text: "s (여름 건조)" }
+            ],
+            "D": [
+                { value: "f", text: "f (연중 습윤)" },
+                { value: "w", text: "w (겨울 건조)" }
+            ],
+            "E": [
+                { value: "T", text: "T (툰드라)" },
+                { value: "F", text: "F (빙설)" }
+            ]
+        };
+
+        // 배경 생성 (지형 Heightmap)
+        function createBackground() {
+            const canvas = document.getElementById('background');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth * 2;
+            canvas.height = window.innerHeight * 2;
+
+            // 이미지 데이터 생성
+            const imageData = ctx.createImageData(canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // 노이즈 함수
+            function noise(x, y) {
+                const scale = 0.01;
+                return (
+                    Math.sin(x * scale) * Math.cos(y * scale) * 0.5 +
+                    Math.sin(x * scale * 2.3) * Math.cos(y * scale * 2.3) * 0.3 +
+                    Math.sin(x * scale * 5.1) * Math.cos(y * scale * 5.1) * 0.2 +
+                    Math.random() * 0.1
+                );
+            }
+
+            // 각 픽셀에 대해 높이값 계산 및 색상 설정
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const i = (y * canvas.width + x) * 4;
+                    
+                    // 높이값 계산
+                    const height = noise(x, y);
+                    
+                    // 높이에 따른 색상 결정
+                    if (height < -0.3) {
+                        // 깊은 바다 (진한 파란색)
+                        data[i] = 10 + Math.random() * 20;
+                        data[i + 1] = 40 + Math.random() * 30;
+                        data[i + 2] = 80 + Math.random() * 40;
+                    } else if (height < -0.1) {
+                        // 얕은 바다 (파란색)
+                        data[i] = 30 + Math.random() * 30;
+                        data[i + 1] = 80 + Math.random() * 40;
+                        data[i + 2] = 140 + Math.random() * 60;
+                    } else if (height < 0.1) {
+                        // 평지/초원 (녹색)
+                        data[i] = 40 + Math.random() * 40;
+                        data[i + 1] = 100 + Math.random() * 60;
+                        data[i + 2] = 40 + Math.random() * 30;
+                    } else if (height < 0.3) {
+                        // 언덕 (연한 갈색/녹색)
+                        data[i] = 80 + Math.random() * 40;
+                        data[i + 1] = 100 + Math.random() * 40;
+                        data[i + 2] = 50 + Math.random() * 30;
+                    } else {
+                        // 산/사막 (갈색)
+                        data[i] = 120 + Math.random() * 60;
+                        data[i + 1] = 80 + Math.random() * 40;
+                        data[i + 2] = 40 + Math.random() * 30;
+                    }
+                    
+                    data[i + 3] = 255; // 알파값 (불투명)
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // 기후 데이터 생성
+        function generateClimateData(type, hemisphere = "north") {
+            const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            let temperatures = [];
+            let precipitations = [];
+            
+            // 남반구인 경우 계절 반전
+            const seasonShift = hemisphere === "south" ? 6 : 0;
+
+            switch(type) {
+                case "열대 우림 기후":
+                    for(let i = 0; i < 12; i++) {
+                        temperatures.push(25 + Math.random() * 3);
+                        precipitations.push(150 + Math.random() * 100);
+                    }
+                    break;
+
+                case "열대 사바나 기후":
+                    for(let i = 0; i < 12; i++) {
+                        temperatures.push(23 + Math.random() * 5);
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 4 && adjustedMonth <= 9) {
+                            precipitations.push(100 + Math.random() * 150);
+                        } else {
+                            precipitations.push(10 + Math.random() * 30);
+                        }
+                    }
+                    break;
+
+                case "열대 몬순 기후":
+                    for(let i = 0; i < 12; i++) {
+                        temperatures.push(24 + Math.random() * 4);
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 9) {
+                            precipitations.push(200 + Math.random() * 200);
+                        } else {
+                            precipitations.push(30 + Math.random() * 40);
+                        }
+                    }
+                    break;
+
+                case "지중해성 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(20 + Math.random() * 5);
+                            precipitations.push(5 + Math.random() * 20);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(8 + Math.random() * 5);
+                            precipitations.push(60 + Math.random() * 40);
+                        } else {
+                            temperatures.push(13 + Math.random() * 5);
+                            precipitations.push(40 + Math.random() * 30);
+                        }
+                    }
+                    break;
+
+                case "서안 해양성 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(15 + Math.random() * 5);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(3 + Math.random() * 5);
+                        } else {
+                            temperatures.push(8 + Math.random() * 5);
+                        }
+                        precipitations.push(50 + Math.random() * 40);
+                    }
+                    break;
+
+                case "온난 습윤 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(24 + Math.random() * 4);
+                            precipitations.push(100 + Math.random() * 100);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(0 + Math.random() * 5);
+                            precipitations.push(40 + Math.random() * 40);
+                        } else {
+                            temperatures.push(12 + Math.random() * 6);
+                            precipitations.push(60 + Math.random() * 40);
+                        }
+                    }
+                    break;
+
+                case "온대 겨울 건조 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(23 + Math.random() * 4);
+                            precipitations.push(150 + Math.random() * 100);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(-1 + Math.random() * 4);
+                            precipitations.push(10 + Math.random() * 20);
+                        } else {
+                            temperatures.push(10 + Math.random() * 8);
+                            precipitations.push(40 + Math.random() * 40);
+                        }
+                    }
+                    break;
+
+                case "냉대 습윤 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(15 + Math.random() * 5);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(-10 + Math.random() * 5);
+                        } else {
+                            temperatures.push(2 + Math.random() * 8);
+                        }
+                        precipitations.push(40 + Math.random() * 40);
+                    }
+                    break;
+
+                case "냉대 겨울 건조 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(18 + Math.random() * 5);
+                            precipitations.push(80 + Math.random() * 80);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(-15 + Math.random() * 5);
+                            precipitations.push(5 + Math.random() * 15);
+                        } else {
+                            temperatures.push(0 + Math.random() * 10);
+                            precipitations.push(20 + Math.random() * 40);
+                        }
+                    }
+                    break;
+
+                case "툰드라 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(3 + Math.random() * 5);
+                        } else {
+                            temperatures.push(-20 + Math.random() * 10);
+                        }
+                        precipitations.push(10 + Math.random() * 30);
+                    }
+                    break;
+
+                case "빙설 기후":
+                    for(let i = 0; i < 12; i++) {
+                        temperatures.push(-30 + Math.random() * 15);
+                        precipitations.push(5 + Math.random() * 20);
+                    }
+                    break;
+
+                case "스텝 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(20 + Math.random() * 8);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(-5 + Math.random() * 10);
+                        } else {
+                            temperatures.push(5 + Math.random() * 10);
+                        }
+                        precipitations.push(15 + Math.random() * 35);
+                    }
+                    break;
+
+                case "사막 기후":
+                    for(let i = 0; i < 12; i++) {
+                        const adjustedMonth = (i + seasonShift) % 12;
+                        if(adjustedMonth >= 5 && adjustedMonth <= 8) {
+                            temperatures.push(30 + Math.random() * 10);
+                        } else if(adjustedMonth >= 0 && adjustedMonth <= 2 || adjustedMonth >= 10) {
+                            temperatures.push(10 + Math.random() * 10);
+                        } else {
+                            temperatures.push(20 + Math.random() * 10);
+                        }
+                        precipitations.push(0 + Math.random() * 15);
+                    }
+                    break;
+            }
+
+            return { months, temperatures, precipitations };
+        }
+
+        // 캔버스로 그래프 그리기
+        function drawClimateGraph(data) {
+            const canvas = document.getElementById('climateCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 캔버스 크기 설정
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const padding = 60;
+            const graphWidth = canvas.width - padding * 2;
+            const graphHeight = canvas.height - padding * 2;
+            
+            // 배경
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 그래프 영역
+            ctx.fillStyle = 'white';
+            ctx.fillRect(padding, padding, graphWidth, graphHeight);
+            
+            // 최대값 찾기
+            const maxTemp = Math.max(...data.temperatures);
+            const minTemp = Math.min(...data.temperatures);
+            
+            // Y축 범위 설정 - 고정값 사용
+            const precipRange = 300; // 강수량 0-300mm 고정
+            let tempMin, tempMax;
+            
+            // 기온 범위 설정 (그래프가 밖으로 나가지 않도록)
+            if (minTemp < -40) {
+                tempMin = -50;
+                tempMax = 50;
+            } else if (minTemp < -20) {
+                tempMin = -40;
+                tempMax = 40;
+            } else if (minTemp < 0) {
+                tempMin = -20;
+                tempMax = 40;
+            } else {
+                tempMin = -10;
+                tempMax = 50;
+            }
+            
+            // 격자선 그리기
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            for(let i = 0; i <= 10; i++) {
+                const y = padding + (graphHeight / 10) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(padding + graphWidth, y);
+                ctx.stroke();
+            }
+            
+            // 월별 막대 및 선 그래프
+            const barWidth = graphWidth / 12 * 0.6;
+            const barGap = graphWidth / 12 * 0.4;
+            
+            // 강수량 막대그래프 (0-300mm 범위)
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.7)';
+            data.precipitations.forEach((precip, i) => {
+                const x = padding + (barWidth + barGap) * i + barGap / 2;
+                const height = (precip / precipRange) * graphHeight;
+                const y = padding + graphHeight - height;
+                
+                ctx.fillRect(x, y, barWidth, height);
+            });
+            
+            // 기온 선그래프
+            ctx.strokeStyle = 'rgba(231, 76, 60, 1)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const tempRange = tempMax - tempMin;
+            
+            data.temperatures.forEach((temp, i) => {
+                const x = padding + (barWidth + barGap) * i + barGap / 2 + barWidth / 2;
+                // 온도를 그래프 범위 내로 제한
+                const clampedTemp = Math.max(tempMin, Math.min(tempMax, temp));
+                const y = padding + graphHeight - ((clampedTemp - tempMin) / tempRange) * graphHeight;
+                
+                if(i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // 기온 점
+            ctx.fillStyle = 'rgba(231, 76, 60, 1)';
+            data.temperatures.forEach((temp, i) => {
+                const x = padding + (barWidth + barGap) * i + barGap / 2 + barWidth / 2;
+                const clampedTemp = Math.max(tempMin, Math.min(tempMax, temp));
+                const y = padding + graphHeight - ((clampedTemp - tempMin) / tempRange) * graphHeight;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // 축 그리기
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, padding + graphHeight);
+            ctx.lineTo(padding + graphWidth, padding + graphHeight);
+            ctx.stroke();
+            
+            // X축 라벨 (월)
+            ctx.fillStyle = '#333';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            data.months.forEach((month, i) => {
+                const x = padding + (barWidth + barGap) * i + barGap / 2 + barWidth / 2;
+                const y = padding + graphHeight + 20;
+                ctx.fillText(month, x, y);
+            });
+            
+            // Y축 라벨 (온도)
+            ctx.textAlign = 'right';
+            const tempSteps = 5;
+            for(let i = 0; i <= tempSteps; i++) {
+                const temp = tempMin + (tempRange / tempSteps) * i;
+                const y = padding + graphHeight - (graphHeight / tempSteps) * i;
+                ctx.fillText(temp.toFixed(0) + '°C', padding - 10, y + 5);
+            }
+            
+            // Y축 라벨 (강수량) - 0-300mm 고정
+            ctx.textAlign = 'left';
+            for(let i = 0; i <= 6; i++) {
+                const precip = 50 * i; // 0, 50, 100, 150, 200, 250, 300
+                const y = padding + graphHeight - (graphHeight / 6) * i;
+                ctx.fillText(precip + 'mm', padding + graphWidth + 10, y + 5);
+            }
+            
+            // 범례
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.7)';
+            ctx.fillRect(padding + graphWidth - 150, padding + 10, 20, 15);
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'left';
+            ctx.fillText('강수량 (mm)', padding + graphWidth - 120, padding + 22);
+            
+            ctx.strokeStyle = 'rgba(231, 76, 60, 1)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(padding + graphWidth - 150, padding + 40);
+            ctx.lineTo(padding + graphWidth - 130, padding + 40);
+            ctx.stroke();
+            ctx.fillStyle = '#333';
+            ctx.fillText('기온 (°C)', padding + graphWidth - 120, padding + 45);
+        }
+
+        // 문제 생성
+        function generateQuestions() {
+            questions = [];
+            const climateTypes = Object.keys(climateMapping);
+            const selectedTypes = [];
+            
+            // 중복 없이 문제 선택
+            while(selectedTypes.length < totalQuestions) {
+                const randomType = climateTypes[Math.floor(Math.random() * climateTypes.length)];
+                if(!selectedTypes.includes(randomType)) {
+                    selectedTypes.push(randomType);
+                }
+                // 모든 타입을 다 사용했으면 중복 허용
+                if(selectedTypes.length === climateTypes.length && selectedTypes.length < totalQuestions) {
+                    selectedTypes.push(...climateTypes.slice(0, totalQuestions - selectedTypes.length));
+                    break;
+                }
+            }
+
+            selectedTypes.forEach(type => {
+                const mapping = climateMapping[type];
+                let hemisphere = "north";
+                
+                // both인 경우 랜덤으로 선택
+                if(mapping.hemisphere === "both") {
+                    hemisphere = Math.random() > 0.5 ? "north" : "south";
+                } else {
+                    hemisphere = mapping.hemisphere;
+                }
+                
+                questions.push({
+                    type: type,
+                    hemisphere: hemisphere,
+                    mapping: mapping,
+                    data: generateClimateData(type, hemisphere)
+                });
+            });
+        }
+
+        // 문제 표시
+        function showQuestion() {
+            const question = questions[currentQuestionIndex];
+            
+            // 진행 상황 업데이트
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('totalQuestions').textContent = totalQuestions;
+            
+            // 그래프 그리기
+            drawClimateGraph(question.data);
+            
+            // 선택 초기화
+            resetSelections();
+            
+            // 버튼 상태 초기화
+            document.getElementById('nextButton').disabled = true;
+            document.getElementById('nextButton').textContent = '정답 확인';
+            document.getElementById('nextButton').onclick = checkAnswer;
+            isAnswered = false;
+        }
+
+        // 선택 초기화
+        function resetSelections() {
+            selectedHemisphere = null;
+            selectedPrimary = null;
+            selectedSecondary = null;
+            
+            document.querySelectorAll('.selection-option').forEach(opt => {
+                opt.classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // 힌트 버튼 색상 초기화
+            document.querySelectorAll('.button-secondary').forEach(btn => {
+                btn.classList.remove('used');
+            });
+            
+            // 2차 구분 초기화
+            document.getElementById('secondaryOptions').innerHTML = 
+                '<p style="color: #999; text-align: center;">1차 구분을 먼저 선택해주세요</p>';
+        }
+
+        // 반구 선택
+        function selectHemisphere(hemisphere) {
+            if(isAnswered) return;
+            
+            selectedHemisphere = hemisphere;
+            document.querySelectorAll('#hemisphereOptions .selection-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            checkAllSelected();
+        }
+
+        // 1차 구분 선택
+        function selectPrimary(primary) {
+            if(isAnswered) return;
+            
+            selectedPrimary = primary;
+            selectedSecondary = null; // 2차 구분 초기화
+            
+            document.querySelectorAll('#primaryOptions .selection-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // 2차 구분 옵션 업데이트
+            updateSecondaryOptions(primary);
+            
+            // 2차 구분 선택 초기화
+            document.querySelectorAll('#secondaryOptions .selection-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            checkAllSelected();
+        }
+
+        // 2차 구분 옵션 업데이트
+        function updateSecondaryOptions(primary) {
+            const container = document.getElementById('secondaryOptions');
+            container.innerHTML = '';
+            
+            if(secondaryOptions[primary]) {
+                secondaryOptions[primary].forEach(option => {
+                    const div = document.createElement('div');
+                    div.className = 'selection-option';
+                    div.textContent = option.text;
+                    div.onclick = () => selectSecondary(option.value);
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        // 2차 구분 선택
+        function selectSecondary(secondary) {
+            if(isAnswered) return;
+            
+            selectedSecondary = secondary;
+            document.querySelectorAll('#secondaryOptions .selection-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            checkAllSelected();
+        }
+
+        // 모든 선택 완료 확인
+        function checkAllSelected() {
+            if(selectedHemisphere && selectedPrimary && selectedSecondary) {
+                document.getElementById('nextButton').disabled = false;
+            } else {
+                document.getElementById('nextButton').disabled = true;
+            }
+        }
+
+        // 정답 확인
+        function checkAnswer() {
+            if(isAnswered) return;
+            
+            isAnswered = true;
+            const question = questions[currentQuestionIndex];
+            const correctHemisphere = question.hemisphere;
+            const correctPrimary = question.mapping.primary;
+            const correctSecondary = question.mapping.secondary;
+            
+            let isCorrect = true;
+            
+            // 반구 확인
+            document.querySelectorAll('#hemisphereOptions .selection-option').forEach(opt => {
+                if((opt.textContent === '북반구' && correctHemisphere === 'north') ||
+                   (opt.textContent === '남반구' && correctHemisphere === 'south')) {
+                    opt.classList.add('correct');
+                } else if(opt.classList.contains('selected')) {
+                    opt.classList.add('incorrect');
+                    isCorrect = false;
+                }
+            });
+            
+            // 1차 구분 확인
+            document.querySelectorAll('#primaryOptions .selection-option').forEach(opt => {
+                if(opt.textContent.includes(`${correctPrimary} (`)) {
+                    opt.classList.add('correct');
+                } else if(opt.classList.contains('selected')) {
+                    opt.classList.add('incorrect');
+                    isCorrect = false;
+                }
+            });
+            
+            // 2차 구분 확인
+            let correctSecondaryFound = false;
+            document.querySelectorAll('#secondaryOptions .selection-option').forEach(opt => {
+                if(opt.textContent.includes(`${correctSecondary} (`)) {
+                    opt.classList.add('correct');
+                    correctSecondaryFound = true;
+                } else if(opt.classList.contains('selected')) {
+                    opt.classList.add('incorrect');
+                    isCorrect = false;
+                }
+            });
+            
+            // 1차 구분이 틀려서 2차 구분에 정답이 없는 경우
+            if(!correctSecondaryFound && selectedPrimary !== correctPrimary) {
+                const container = document.getElementById('secondaryOptions');
+                const correctOption = document.createElement('div');
+                correctOption.className = 'selection-option correct';
+                correctOption.style.opacity = '0.7';
+                correctOption.style.cursor = 'default';
+                
+                // 정답 찾기
+                const correctSecondaryText = secondaryOptions[correctPrimary]?.find(
+                    opt => opt.value === correctSecondary
+                )?.text || `${correctSecondary} (${question.type})`;
+                
+                correctOption.textContent = `정답: ${correctSecondaryText}`;
+                container.appendChild(correctOption);
+            }
+            
+            // 정답 체크
+            if(isCorrect) {
+                correctAnswers++;
+            }
+            
+            // 버튼 변경
+            const nextButton = document.getElementById('nextButton');
+            if(currentQuestionIndex < totalQuestions - 1) {
+                nextButton.textContent = '다음 문제';
+                nextButton.onclick = nextQuestion;
+                nextButton.disabled = false;
+            } else {
+                nextButton.textContent = '결과 보기';
+                nextButton.onclick = showResult;
+                nextButton.disabled = false;
+            }
+        }
+
+        // 다음 문제
+        function nextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        // 힌트 표시
+        function showHint(hintNumber) {
+            const question = questions[currentQuestionIndex];
+            const popup = document.getElementById('hintPopup');
+            const overlay = document.getElementById('overlay');
+            const title = document.getElementById('hintTitle');
+            const content = document.getElementById('hintContent');
+            
+            // 힌트 버튼 색상 변경 - 올바른 인덱스 사용
+            const hintButtons = document.querySelectorAll('.action-buttons .button-secondary');
+            if(hintNumber === 1 && hintButtons[0]) {
+                hintButtons[0].classList.add('used');
+            } else if(hintNumber === 2 && hintButtons[1]) {
+                hintButtons[1].classList.add('used');
+            }
+            
+            title.textContent = `힌트 ${hintNumber}`;
+            
+            if(hintNumber === 1) {
+                // 기온 관련 힌트
+                const temps = question.data.temperatures;
+                const maxTemp = Math.max(...temps);
+                const minTemp = Math.min(...temps);
+                const avgTemp = temps.reduce((a, b) => a + b) / temps.length;
+                
+                content.innerHTML = `
+                    <strong>기온 정보:</strong><br>
+                    • 최고 기온: ${maxTemp.toFixed(1)}°C<br>
+                    • 최저 기온: ${minTemp.toFixed(1)}°C<br>
+                    • 연평균 기온: ${avgTemp.toFixed(1)}°C<br><br>
+                    <strong>반구 힌트:</strong><br>
+                    • 6~8월 평균: ${(temps.slice(5, 8).reduce((a, b) => a + b, 0) / 3).toFixed(1)}°C<br>
+                    • 12~2월 평균: ${([temps[11], temps[0], temps[1]].reduce((a, b) => a + b, 0) / 3).toFixed(1)}°C<br><br>
+                    <em>어느 시기가 더 따뜻한지 확인해보세요!</em>
+                `;
+            } else {
+                // 강수 관련 힌트
+                const precips = question.data.precipitations;
+                const totalPrecip = precips.reduce((a, b) => a + b);
+                const summerPrecip = precips.slice(5, 9).reduce((a, b) => a + b);
+                const winterPrecip = precips.slice(0, 3).concat(precips.slice(10)).reduce((a, b) => a + b);
+                
+                content.innerHTML = `
+                    <strong>강수 정보:</strong><br>
+                    • 연강수량: ${totalPrecip.toFixed(0)}mm<br>
+                    • 여름(6~9월) 강수 비율: ${(summerPrecip/totalPrecip*100).toFixed(0)}%<br>
+                    • 겨울(12~3월) 강수 비율: ${(winterPrecip/totalPrecip*100).toFixed(0)}%<br>
+                    • 최소 월강수량: ${Math.min(...precips).toFixed(0)}mm<br><br>
+                    <em>강수의 계절 분포와 건조도를 확인해보세요!</em>
+                `;
+            }
+            
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        // 결과 표시
+        function showResult() {
+            const quizPage = document.getElementById('quizPage');
+            const resultPage = document.getElementById('resultPage');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const scoreMessage = document.getElementById('scoreMessage');
+            
+            quizPage.style.display = 'none';
+            resultPage.style.display = 'block';
+            
+            const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+            scoreDisplay.textContent = percentage + '%';
+            
+            // 점수에 따른 스타일과 메시지
+            if(percentage >= 90) {
+                scoreDisplay.className = 'score excellent';
+                scoreMessage.textContent = '훌륭해요! 쾨펜의 기후 구분을 완벽히 이해하고 있네요!';
+            } else if(percentage >= 70) {
+                scoreDisplay.className = 'score good';
+                scoreMessage.textContent = '잘했어요! 조금만 더 연습하면 완벽해질 거예요!';
+            } else if(percentage >= 50) {
+                scoreDisplay.className = 'score fair';
+                scoreMessage.textContent = '괜찮아요! 기후 특징을 다시 한번 복습해보세요.';
+            } else {
+                scoreDisplay.className = 'score poor';
+                scoreMessage.textContent = '아쉬워요. 튜토리얼을 다시 보고 연습해보세요!';
+            }
+            
+            scoreMessage.innerHTML += `<br><br>총 ${totalQuestions}문제 중 ${correctAnswers}문제 정답`;
+        }
+
+        // 팝업 관련 함수
+        function showQuestionPopup() {
+            document.getElementById('questionPopup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function showTutorial() {
+            document.getElementById('tutorialPopup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closePopup(popupId) {
+            document.getElementById(popupId).style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // 퀴즈 시작
+        function startQuiz() {
+            const count = parseInt(document.getElementById('questionCount').value);
+            if(count < 4) {
+                alert('에이~ 너무 적지 않아요? 최소 4문제는 풀어보세요!');
+                return;
+            }
+            if(count > 100) {
+                alert('최대 100문제까지만 가능합니다.');
+                return;
+            }
+            
+            totalQuestions = count;
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            
+            closePopup('questionPopup');
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('quizPage').style.display = 'block';
+            
+            generateQuestions();
+            showQuestion();
+        }
+
+        // 메인으로 돌아가기
+        function backToMain() {
+            document.getElementById('resultPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+        }
+
+        // 초기화
+        window.onload = function() {
+            createBackground();
+        };
+
+        // 창 크기 변경 시 배경 재생성
+        window.onresize = function() {
+            createBackground();
+        };
+    </script>
+</body>
 </html>
